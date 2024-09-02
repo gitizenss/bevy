@@ -4,6 +4,8 @@
 //! by their string name. Reflection is a core part of Bevy and enables a number of interesting
 //! features (like scenes).
 
+use std::any::Any;
+
 use bevy::{
     prelude::*,
     reflect::{
@@ -17,7 +19,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         // Bar will be automatically registered as it's a dependency of Foo
-        .register_type::<Foo>()
+        // .register_type::<Foo>()
         .add_systems(Startup, setup)
         .run();
 }
@@ -94,6 +96,8 @@ fn setup(type_registry: Res<AppTypeRegistry>) {
     let mut deserializer = ron::de::Deserializer::from_str(&ron_string).unwrap();
     let reflect_value = reflect_deserializer.deserialize(&mut deserializer).unwrap();
 
+    assert!(type_registry.contains(value.type_id()));
+
     // Deserializing returns a Box<dyn Reflect> value. Generally, deserializing a value will return
     // the "dynamic" variant of a type. For example, deserializing a struct will return the
     // DynamicStruct type. "Value types" will be deserialized as themselves.
@@ -107,4 +111,6 @@ fn setup(type_registry: Res<AppTypeRegistry>) {
     // By "patching" `Foo` with the deserialized DynamicStruct, we can "Deserialize" Foo.
     // This means we can serialize and deserialize with a single `Reflect` derive!
     value.apply(&*reflect_value);
+
+    info!("{}", type_registry.iter().collect::<Vec<_>>().len());
 }
