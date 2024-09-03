@@ -9,6 +9,14 @@ use std::{
     sync::{Arc, PoisonError, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
 
+#[cfg(target_family = "wasm")]
+pub static DERIVED_REFLECT_TYPES: RwLock<Vec<fn(&mut TypeRegistry)>> = RwLock::new(Vec::new());
+#[cfg(not(target_family = "wasm"))]
+#[allow(non_camel_case_types)]
+pub struct DERIVED_REFLECT_TYPES(pub fn(&mut TypeRegistry));
+#[cfg(not(target_family = "wasm"))]
+inventory::collect!(DERIVED_REFLECT_TYPES);
+
 /// A registry of [reflected] types.
 ///
 /// This struct is used as the central store for type information.
@@ -108,7 +116,24 @@ impl TypeRegistry {
         registry.register::<f32>();
         registry.register::<f64>();
         registry.register::<String>();
+        registry.register_derived_types();
         registry
+    }
+
+    pub fn register_derived_types(&mut self) {
+        // wasm_init must be called at least once to run all init code.
+        // Calling it multiple times is ok and doesn't do anything.
+        #[cfg(target_family = "wasm")]
+        wasm_init::wasm_init();
+
+        #[cfg(target_family = "wasm")]
+        for ty in DERIVED_REFLECT_TYPES.read().unwrap().iter() {
+            ty(self)
+        }
+        #[cfg(not(target_family = "wasm"))]
+        for ty in inventory::iter::<DERIVED_REFLECT_TYPES> {
+            ty.0(self)
+        }
     }
 
     /// Attempts to register the type `T` if it has not yet been registered already.
