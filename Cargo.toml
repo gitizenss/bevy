@@ -349,6 +349,15 @@ ios_simulator = ["bevy_internal/ios_simulator"]
 # Enable built in global state machines
 bevy_state = ["bevy_internal/bevy_state"]
 
+# Enables source location tracking for change detection, which can assist with debugging
+track_change_detection = ["bevy_internal/track_change_detection"]
+
+# Enable function reflection
+reflect_functions = ["bevy_internal/reflect_functions"]
+
+# Enables automatic registration of types annotated with #[derive(Reflect)]
+reflect_auto_register = ["bevy_internal/reflect_auto_register"]
+
 [dependencies]
 bevy_internal = { path = "crates/bevy_internal", version = "0.14.2", default-features = false }
 
