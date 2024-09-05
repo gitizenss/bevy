@@ -24,16 +24,8 @@ pub use resource::{ReflectResource, ReflectResourceFns};
 
 /// A [`Resource`] storing [`TypeRegistry`] for
 /// type registrations relevant to a whole app.
-#[derive(Resource, Clone)]
+#[derive(Resource, Clone, Default)]
 pub struct AppTypeRegistry(pub TypeRegistryArc);
-
-impl Default for AppTypeRegistry {
-    fn default() -> Self {
-        let registry_arc = TypeRegistryArc::default();
-        registry_arc.write().register_derived_types();
-        Self(registry_arc)
-    }
-}
 
 impl Deref for AppTypeRegistry {
     type Target = TypeRegistryArc;
@@ -51,7 +43,44 @@ impl DerefMut for AppTypeRegistry {
     }
 }
 
-/// Creates a `T` from a `&dyn Reflect`.
+impl AppTypeRegistry {
+    /// Creates [`AppTypeRegistry`] and calls [`register_derived_types`](TypeRegistry::register_derived_types) on it.
+    ///
+    /// See [`register_derived_types`](TypeRegistry::register_derived_types) for more details.
+    pub fn new_with_derived_types() -> Self {
+        let app_registry = AppTypeRegistry::default();
+        app_registry.write().register_derived_types();
+        app_registry
+    }
+}
+
+/// A [`Resource`] storing [`FunctionRegistry`] for
+/// function registrations relevant to a whole app.
+///
+/// [`FunctionRegistry`]: bevy_reflect::func::FunctionRegistry
+#[cfg(feature = "reflect_functions")]
+#[derive(Resource, Clone, Default)]
+pub struct AppFunctionRegistry(pub bevy_reflect::func::FunctionRegistryArc);
+
+#[cfg(feature = "reflect_functions")]
+impl Deref for AppFunctionRegistry {
+    type Target = bevy_reflect::func::FunctionRegistryArc;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+#[cfg(feature = "reflect_functions")]
+impl DerefMut for AppFunctionRegistry {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+/// Creates a `T` from a `&dyn PartialReflect`.
 ///
 /// This will try the following strategies, in this order:
 ///
