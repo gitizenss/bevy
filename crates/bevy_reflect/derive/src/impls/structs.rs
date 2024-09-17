@@ -87,10 +87,6 @@ pub(crate) fn impl_struct(reflect_struct: &ReflectStruct) -> proc_macro2::TokenS
 
         #type_path_impl
 
-        #full_reflect_impl
-
-        #function_impls
-
         #auto_reflect
 
         impl #impl_generics #bevy_reflect_path::Struct for #struct_path #ty_generics #where_reflect_clause {
